@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jardín Épico de Kath</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Video más pequeño CON SONIDO -->
+<div class="video-container">
+    <video id="backgroundVideo" loop autoplay>
+        <source src="morat.mp4" type="video/mp4">
+    </video>
+</div>
+
+<!-- Nueva interfaz de preguntas -->
+<div class="quiz-overlay" id="quizOverlay">
+    <!-- Fondo de estrellas para el quiz -->
+    <div class="quiz-stars" id="quizStars"></div>
+
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h2>¿Qué tanto me conoces, Kath? 🌷</h2>
+            <div class="progress">
+                <span id="progressText">Tulipanes ganados: 0/10</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="question-container" id="questionContainer">
+            <div class="category-badge" id="categoryBadge">🟢 CATEGORÍA 1: Lo más básico</div>
+            <h3 class="question-text" id="questionText">¿Cuál es mi color favorito?</h3>
+
+            <div class="options-grid" id="optionsGrid">
+                <button class="option-btn" data-answer="A">A) Azul</button>
+                <button class="option-btn" data-answer="B">B) Verde</button>
+                <button class="option-btn" data-answer="C">C) Negro</button>
+                <button class="option-btn" data-answer="D">D) Rojo</button>
+            </div>
+
+            <div class="feedback" id="feedback"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay para imágenes "pelas" -->
+<div class="pelas-overlay" id="pelasOverlay">
+    <div class="pelas-container">
+        <div class="pelas-text" id="pelasText">¡EXCELENTE!</div>
+        <img class="pelas-image" id="pelasImage" src="" alt="Pelas">
+        <div class="pelas-message" id="pelasMessage"></div>
+    </div>
+</div>
+
+<!-- Mensaje final épico -->
+<div class="final-message" id="finalMessage">
+    <div class="final-content">
+        <h1>🌷 JARDÍN MÁGICO DE KATH 🌷</h1>
+        <p>Cada tulipán representa lo especial que eres para mí</p>
+        <p>¡Eres pura magia, amiga! ✨</p>
+        <button class="close-final-btn" onclick="startEpicGardenWithSound()">¡Ver mi jardín épico! 🌟</button>
+    </div>
+</div>
+
+<!-- Jardín épico expandido -->
+<div class="epic-garden-container" id="epicGarden">
+    <!-- Aquí se generarán tulipanes por TODA la pantalla -->
+</div>
+
+<!-- Efectos mágicos épicos -->
+<div class="epic-effects" id="epicEffects">
+    <!-- Lluvia de pétalos masiva -->
+    <div class="massive-petals" id="massivePetals"></div>
+
+    <!-- Mariposas por toda la pantalla -->
+    <div class="epic-butterflies" id="epicButterflies"></div>
+
+    <!-- Estrellas por doquier -->
+    <div class="star-field" id="starField"></div>
+
+    <!-- Lunas múltiples -->
+    <div class="multiple-moons" id="multipleMoons"></div>
+
+    <!-- Marco de agua con "Kath" al centro -->
+    <div class="water-frame" id="waterFrame">
+        <div class="water-text">KATH</div>
+        <div class="water-ripples"></div>
+    </div>
+
+    <!-- Fuegos artificiales -->
+    <div class="fireworks" id="fireworks"></div>
+
+    <!-- Aurora boreal -->
+    <div class="aurora" id="aurora"></div>
+</div>
+
+
+
+<script src="TulipanEngine.js"></script>
+<script>
+    // Variables globales
+    let activeTulipans = [];
+    let currentQuestion = 0;
+    let score = 0;
+    let epicMode = false;
+    let videoPlaying = false;
+    let audioPlaying = false;
+
+    // Configuración épica - usar TODA la pantalla
+    const SCREEN_WIDTH = window.innerWidth;
+    const SCREEN_HEIGHT = window.innerHeight;
+    const MARGIN = 50;
+
+    // Posición aleatoria EVITANDO el centro donde está "KATH"
+    function generateEpicPosition() {
+        let x, y;
+
+        do {
+            x = Math.random() * (SCREEN_WIDTH - (MARGIN * 2)) + MARGIN;
+            y = Math.random() * (SCREEN_HEIGHT - (MARGIN * 2)) + MARGIN;
+        } while (
+            // Evitar área central donde está "KATH" (centro de pantalla)
+        x > SCREEN_WIDTH * 0.3 && x < SCREEN_WIDTH * 0.7 &&
+        y > SCREEN_HEIGHT * 0.35 && y < SCREEN_HEIGHT * 0.65
+            );
+
+        return { x: Math.floor(x), y: Math.floor(y) };
+    }
+
+    const TILT_DIRECTIONS = [-25, -15, -8, 0, 8, 15, 25];
+
+    function createEpicTulipan() {
+        const position = generateEpicPosition();
+        const tiltDirection = TILT_DIRECTIONS[Math.floor(Math.random() * TILT_DIRECTIONS.length)];
+        const animationDelay = Math.random() * 1000;
+        const canvasId = `spriteCanvas_${Date.now()}_${Math.random()}`;
+        const particlesId = `particlesCanvas_${Date.now()}_${Math.random()}`;
+
+        const userSection = document.createElement('div');
+        userSection.className = 'epic-tulipan';
+        userSection.style.position = 'absolute';
+        userSection.style.left = position.x + 'px';
+        userSection.style.top = position.y + 'px';
+        userSection.style.zIndex = '100';
+
+        const tulipanContainer = document.createElement('div');
+        tulipanContainer.className = 'tulipan-container';
+
+        const spriteCanvas = document.createElement('canvas');
+        spriteCanvas.className = 'sprite-canvas';
+        spriteCanvas.id = canvasId;
+
+        const particlesCanvas = document.createElement('canvas');
+        particlesCanvas.className = 'particles-canvas';
+        particlesCanvas.id = particlesId;
+
+        tulipanContainer.appendChild(spriteCanvas);
+        tulipanContainer.appendChild(particlesCanvas);
+        userSection.appendChild(tulipanContainer);
+
+        document.getElementById('epicGarden').appendChild(userSection);
+
+        const tulipan = new TulipanSpriteEngine(canvasId, particlesId, tiltDirection, animationDelay);
+
+        activeTulipans.push({
+            element: userSection,
+            engine: tulipan,
+            position: position
+        });
+
+        return tulipan;
+    }
+
+    // Preguntas
+    const questions = [
+        {
+            category: "🟢 CATEGORÍA 1: Lo más básico",
+            question: "¿Cuál es mi color favorito?",
+            options: ["A) Azul", "B) Verde", "C) Negro", "D) Rojo"],
+            correct: "B"
+        },
+        {
+            category: "🟢 CATEGORÍA 1: Lo más básico",
+            question: "¿Cuándo es mi cumpleaños?",
+            options: ["A) 10 de octubre", "B) 17 de octubre", "C) 21 de septiembre", "D) 1 de noviembre"],
+            correct: "B"
+        },
+        {
+            category: "🟡 CATEGORÍA 2: Gustos personales",
+            question: "¿Cuál es mi comida favorita?",
+            options: ["A) Ceviche", "B) Lomo saltado", "C) Rocoto relleno", "D) Ají de gallina"],
+            correct: "C"
+        },
+        {
+            category: "🟡 CATEGORÍA 2: Gustos personales",
+            question: "¿Cuál de estas películas me gusta más?",
+            options: ["A) Harry Potter", "B) Avengers: Endgame", "C) La Bamba", "D) El Señor de los Anillos"],
+            correct: "C"
+        },
+        {
+            category: "🟠 CATEGORÍA 3: Conociéndome mejor",
+            question: "¿Quién es mi cantante crush?",
+            options: ["A) Danna Paola", "B) Alizée", "C) Belinda", "D) Karol G"],
+            correct: "B"
+        },
+        {
+            category: "🟠 CATEGORÍA 3: Conociéndome mejor",
+            question: "¿A qué lugar fue mi último viaje este año?",
+            options: ["A) Piura", "B) Trujillo", "C) Cusco", "D) Lima"],
+            correct: "D"
+        },
+        {
+            category: "🔵 CATEGORÍA 4: Detalles personales",
+            question: "¿Cómo se llama mi gata?",
+            options: ["A) Luna", "B) Arya", "C) Mía", "D) Kitty"],
+            correct: "B"
+        },
+        {
+            category: "🔵 CATEGORÍA 4: Detalles personales",
+            question: "¿Qué nombre le pondría a mi hija si tuviera una?",
+            options: ["A) Claire", "B) Isabela", "C) Renata", "D) Emily"],
+            correct: "A"
+        },
+        {
+            category: "🔴 CATEGORÍA 5: Nivel experto",
+            question: "¿En qué parte del cuerpo me fijo más en una persona?",
+            options: ["A) Ojos", "B) Cabello", "C) Nariz", "D) Orejas"],
+            correct: "B"
+        },
+        {
+            category: "🔴 CATEGORÍA 5: Nivel experto",
+            question: "Si tuviera que elegir una saga para ver en maratón, ¿cuál elegiría?",
+            options: ["A) Rápidos y Furiosos", "B) Harry Potter", "C) Transformers", "D) Matrix"],
+            correct: "B"
+        }
+    ];
+
+    function showPelasImage(isCorrect, message) {
+        const overlay = document.getElementById('pelasOverlay');
+        const image = document.getElementById('pelasImage');
+        const messageEl = document.getElementById('pelasMessage');
+        const textEl = document.getElementById('pelasText');
+
+        image.src = isCorrect ? 'correcto.png' : 'incorrecto.png';
+        messageEl.textContent = message;
+        textEl.textContent = isCorrect ? '¡EXCELENTE!' : 'PELAS';
+
+        // Agregar clases para estilos específicos
+        if (isCorrect) {
+            textEl.className = 'pelas-text excellent';
+            image.className = 'pelas-image excellent';
+            messageEl.className = 'pelas-message excellent';
+        } else {
+            textEl.className = 'pelas-text wrong';
+            image.className = 'pelas-image wrong';
+            messageEl.className = 'pelas-message wrong';
+        }
+
+        overlay.style.display = 'flex';
+
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 3000); // Aumentado a 3 segundos para apreciar la animación
+    }
+
+    function updateProgress() {
+        const progressText = document.getElementById('progressText');
+        const progressFill = document.getElementById('progressFill');
+
+        progressText.textContent = `Tulipanes ganados: ${score}/10`;
+        progressFill.style.width = `${(score / 10) * 100}%`;
+    }
+
+    function showQuestion() {
+        if (currentQuestion >= questions.length) {
+            finishQuiz();
+            return;
+        }
+
+        const q = questions[currentQuestion];
+
+        document.getElementById('categoryBadge').textContent = q.category;
+        document.getElementById('questionText').textContent = q.question;
+
+        const optionsGrid = document.getElementById('optionsGrid');
+        optionsGrid.innerHTML = '';
+
+        q.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.className = 'option-btn';
+            button.dataset.answer = String.fromCharCode(65 + index);
+            button.textContent = option;
+            button.onclick = () => checkAnswer(button.dataset.answer);
+            optionsGrid.appendChild(button);
+        });
+
+        document.getElementById('feedback').textContent = '';
+    }
+
+    function checkAnswer(selectedAnswer) {
+        const q = questions[currentQuestion];
+
+        if (selectedAnswer === q.correct) {
+            score++;
+            createEpicTulipan();
+            updateProgress();
+            showPelasImage(true, "¡Exacto! Me conoces muy bien ✨");
+
+            currentQuestion++;
+            setTimeout(() => {
+                showQuestion();
+            }, 3000);
+        } else {
+            showPelasImage(false, "Mmm... casi! Inténtalo de nuevo 💕");
+            document.getElementById('feedback').textContent = "¡Inténtalo de nuevo!";
+        }
+    }
+
+    function finishQuiz() {
+        document.getElementById('quizOverlay').style.display = 'none';
+        setTimeout(() => {
+            document.getElementById('finalMessage').style.display = 'flex';
+        }, 1000);
+    }
+
+    // FUNCIONES ÉPICAS
+    function startEpicGardenWithSound() {
+        document.getElementById('finalMessage').style.display = 'none';
+        epicMode = true;
+
+        // ACTIVAR VIDEO CON SONIDO al presionar el botón
+        const video = document.getElementById('backgroundVideo');
+        video.muted = false;
+        video.volume = 0.7; // Volumen al 70%
+        video.play().then(() => {
+            console.log('Video playing with sound!');
+        }).catch(e => {
+            console.log('Sound blocked, playing muted');
+            video.muted = true;
+            video.play();
+        });
+
+        // Crear tulipanes evitando el centro
+        for (let i = 0; i < 250; i++) {
+            setTimeout(() => {
+                createEpicTulipan();
+            }, i * 80);
+        }
+
+        // Iniciar todos los efectos épicos
+        setTimeout(() => {
+            startEpicEffects();
+        }, 2000);
+    }
+
+    function startEpicGarden() {
+        // Función original sin sonido (backup)
+        startEpicGardenWithSound();
+    }
+
+    function startEpicEffects() {
+        createStarField();
+        startMassivePetals();
+        startWaterFrame();
+    }
+
+    function createStarField() {
+        const container = document.getElementById('starField');
+        // MÁS estrellas para fondo completo
+        for (let i = 0; i < 150; i++) {
+            const star = document.createElement('div');
+            star.className = 'epic-star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 5 + 's';
+            container.appendChild(star);
+        }
+    }
+
+    function startMassivePetals() {
+        const container = document.getElementById('massivePetals');
+
+        function createMassivePetal() {
+            const petal = document.createElement('div');
+            petal.className = 'epic-petal';
+            petal.style.left = Math.random() * 100 + '%';
+            petal.style.animationDuration = (Math.random() * 4 + 3) + 's';
+
+            const petalTypes = ['🌸', '🌺', '🌻', '🌼', '🌹', '🌷', '💮', '🏵️'];
+            petal.textContent = petalTypes[Math.floor(Math.random() * petalTypes.length)];
+
+            container.appendChild(petal);
+
+            setTimeout(() => {
+                if (petal.parentNode) petal.remove();
+            }, 8000);
+        }
+
+        setInterval(createMassivePetal, 1500); // Menos frecuente
+
+        // Crear menos pétalos iniciales
+        for (let i = 0; i < 10; i++) {
+            setTimeout(createMassivePetal, i * 300);
+        }
+    }
+
+    function startEpicButterflies() {
+        const container = document.getElementById('epicButterflies');
+
+        function createEpicButterfly() {
+            const butterfly = document.createElement('div');
+            butterfly.className = 'epic-butterfly';
+            butterfly.textContent = '🦋';
+            butterfly.style.left = Math.random() * 100 + '%';
+            butterfly.style.top = Math.random() * 100 + '%';
+
+            container.appendChild(butterfly);
+
+            setTimeout(() => {
+                if (butterfly.parentNode) butterfly.remove();
+            }, 20000);
+        }
+
+        setInterval(createEpicButterfly, 2000);
+
+        // Crear varias inmediatamente
+        for (let i = 0; i < 8; i++) {
+            setTimeout(createEpicButterfly, i * 500);
+        }
+    }
+
+    function startMultipleMoons() {
+        const container = document.getElementById('multipleMoons');
+        const moonPositions = [
+            {top: '10%', right: '10%'},
+            {top: '20%', left: '5%'},
+            {bottom: '15%', right: '5%'}
+        ];
+
+        moonPositions.forEach((pos, index) => {
+            const moon = document.createElement('div');
+            moon.className = 'epic-moon';
+            Object.assign(moon.style, pos);
+            moon.style.animationDelay = index * 2 + 's';
+            container.appendChild(moon);
+        });
+    }
+
+    function startWaterFrame() {
+        const waterFrame = document.getElementById('waterFrame');
+        waterFrame.style.display = 'block';
+    }
+
+    function startFireworks() {
+        const container = document.getElementById('fireworks');
+
+        function createFirework() {
+            const firework = document.createElement('div');
+            firework.className = 'firework';
+            firework.style.left = Math.random() * 100 + '%';
+            firework.style.top = Math.random() * 50 + 25 + '%';
+
+            container.appendChild(firework);
+
+            setTimeout(() => {
+                if (firework.parentNode) firework.remove();
+            }, 3000);
+        }
+
+        setInterval(createFirework, 4000);
+    }
+
+    function startAurora() {
+        const aurora = document.getElementById('aurora');
+        aurora.style.display = 'block';
+    }
+
+    // Inicializar
+    showQuestion();
+    updateProgress();
+    createQuizStars(); // Crear estrellas para el quiz
+
+    // Video SIN sonido al cargar (para evitar bloqueos)
+    setTimeout(() => {
+        const video = document.getElementById('backgroundVideo');
+        video.muted = true; // Silenciado al inicio
+        video.play().catch(e => console.log('Video autoplay blocked'));
+        videoPlaying = true;
+    }, 1000);
+
+    // Función para crear estrellas en el quiz
+    function createQuizStars() {
+        const container = document.getElementById('quizStars');
+        for (let i = 0; i < 100; i++) {
+            const star = document.createElement('div');
+            star.className = 'quiz-star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 5 + 's';
+
+            // Diferentes tipos de estrellas
+            if (i % 4 === 0) {
+                star.classList.add('star-gold');
+            } else if (i % 4 === 1) {
+                star.classList.add('star-blue');
+            } else if (i % 4 === 2) {
+                star.classList.add('star-pink');
+            }
+
+            container.appendChild(star);
+        }
+    }
+</script>
+</body>
+</html>
