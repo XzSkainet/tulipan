@@ -8,12 +8,11 @@
 </head>
 <body>
 
-<!-- Video más pequeño CON SONIDO -->
-<div class="video-container">
-    <video id="backgroundVideo" loop autoplay>
-        <source src="morat.mp4" type="video/mp4">
-    </video>
-</div>
+<!-- Audio de fondo -->
+<audio id="backgroundAudio" loop>
+    <source src="morat.mp4" type="audio/mp4">
+    <source src="morat.mp3" type="audio/mpeg">
+</audio>
 
 <!-- Nueva interfaz de preguntas -->
 <div class="quiz-overlay" id="quizOverlay">
@@ -59,10 +58,25 @@
 <!-- Mensaje final épico -->
 <div class="final-message" id="finalMessage">
     <div class="final-content">
-        <h1>🌷 JARDÍN MÁGICO DE KATH 🌷</h1>
-        <p>Cada tulipán representa lo especial que eres para mí</p>
-        <p>¡Eres pura magia, amiga! ✨</p>
-        <button class="close-final-btn" onclick="startEpicGardenWithSound()">¡Ver mi jardín épico! 🌟</button>
+        <div class="final-icon">🌸✨🌷</div>
+        <h1>¡KATH, ERES LA MEJOR! 🌷</h1>
+
+        <div class="final-messages">
+            <p>🌟 <strong>Eres increíble</strong> y me siento muy feliz de tenerte en mi vida</p>
+            <p>💫 Gracias por ser la amiga más especial que existe</p>
+            <p>🌸 Siempre sabes cómo hacerme sonreír y alegrar mis días</p>
+            <p>✨ Eres de esas personas que brillan con luz propia</p>
+            <p>🌷 Este jardín es para ti, lleno de todo mi cariño</p>
+            <p>💕 Que sepas que siempre puedes contar conmigo</p>
+        </div>
+
+        <div style="font-size: 16px; margin-top: 20px; color: #ffd700;">💡 Tip: Haz clic en los tulipanes para hacerlos explotar</div>
+
+        <button class="close-final-btn" onclick="startEpicGardenWithSound()">
+            <span class="btn-icon">🌷</span>
+            <span class="btn-text">¡Quiero ver mi jardín!</span>
+            <span class="btn-sparkle">✨</span>
+        </button>
     </div>
 </div>
 
@@ -98,8 +112,6 @@
     <div class="aurora" id="aurora"></div>
 </div>
 
-
-
 <script src="TulipanEngine.js"></script>
 <script>
     // Variables globales
@@ -107,7 +119,6 @@
     let currentQuestion = 0;
     let score = 0;
     let epicMode = false;
-    let videoPlaying = false;
     let audioPlaying = false;
 
     // Configuración épica - usar TODA la pantalla
@@ -141,11 +152,18 @@
         const particlesId = `particlesCanvas_${Date.now()}_${Math.random()}`;
 
         const userSection = document.createElement('div');
-        userSection.className = 'epic-tulipan';
+        userSection.className = 'epic-tulipan clickable-tulipan';
         userSection.style.position = 'absolute';
         userSection.style.left = position.x + 'px';
         userSection.style.top = position.y + 'px';
         userSection.style.zIndex = '100';
+        userSection.style.cursor = 'pointer';
+
+        // Hacer clickeable
+        userSection.addEventListener('click', (e) => {
+            e.stopPropagation();
+            explodeTulipan(userSection, position);
+        });
 
         const tulipanContainer = document.createElement('div');
         tulipanContainer.className = 'tulipan-container';
@@ -173,6 +191,71 @@
         });
 
         return tulipan;
+    }
+
+    // Función para explosión de tulipanes
+    function explodeTulipan(tulipanElement, position) {
+        // Crear explosión de partículas
+        createExplosionParticles(position);
+
+        // Animación de explosión del tulipán
+        tulipanElement.style.transform = 'scale(1.5) rotate(360deg)';
+        tulipanElement.style.opacity = '0';
+        tulipanElement.style.transition = 'all 0.8s ease';
+
+        // Remover después de la animación
+        setTimeout(() => {
+            tulipanElement.remove();
+
+            // Crear nuevo tulipán en posición aleatoria después de 1 segundo
+            setTimeout(() => {
+                createEpicTulipan();
+            }, 1000);
+        }, 800);
+    }
+
+    function createExplosionParticles(position) {
+        const colors = ['#ff6b9d', '#ffd700', '#fff', '#ff69b4', '#87ceeb', '#98fb98', '#ffb6c1'];
+
+        // Crear 20 partículas de explosión
+        for (let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'explosion-particle';
+            particle.style.position = 'absolute';
+            particle.style.left = position.x + 'px';
+            particle.style.top = position.y + 'px';
+            particle.style.width = '8px';
+            particle.style.height = '8px';
+            particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            particle.style.borderRadius = '50%';
+            particle.style.pointerEvents = 'none';
+            particle.style.zIndex = '200';
+            particle.style.boxShadow = `0 0 10px ${colors[Math.floor(Math.random() * colors.length)]}`;
+
+            document.body.appendChild(particle);
+
+            // Animación de explosión
+            const angle = (Math.PI * 2 * i) / 20;
+            const distance = 60 + Math.random() * 60;
+            const finalX = position.x + Math.cos(angle) * distance;
+            const finalY = position.y + Math.sin(angle) * distance;
+
+            particle.animate([
+                {
+                    transform: 'translate(0, 0) scale(1)',
+                    opacity: 1
+                },
+                {
+                    transform: `translate(${finalX - position.x}px, ${finalY - position.y}px) scale(0)`,
+                    opacity: 0
+                }
+            ], {
+                duration: 1200,
+                easing: 'ease-out'
+            }).addEventListener('finish', () => {
+                particle.remove();
+            });
+        }
     }
 
     // Preguntas
@@ -264,7 +347,7 @@
 
         setTimeout(() => {
             overlay.style.display = 'none';
-        }, 3000); // Aumentado a 3 segundos para apreciar la animación
+        }, 3000);
     }
 
     function updateProgress() {
@@ -308,14 +391,14 @@
             score++;
             createEpicTulipan();
             updateProgress();
-            showPelasImage(true, "¡Exacto! Me conoces muy bien ✨");
+            showPelasImage(true, "¡Exacto! Me conoces muy bien amonos ✨");
 
             currentQuestion++;
             setTimeout(() => {
                 showQuestion();
             }, 3000);
         } else {
-            showPelasImage(false, "Mmm... casi! Inténtalo de nuevo 💕");
+            showPelasImage(false, "Mmm... casi! me dueles 💕");
             document.getElementById('feedback').textContent = "¡Inténtalo de nuevo!";
         }
     }
@@ -332,20 +415,17 @@
         document.getElementById('finalMessage').style.display = 'none';
         epicMode = true;
 
-        // ACTIVAR VIDEO CON SONIDO al presionar el botón
-        const video = document.getElementById('backgroundVideo');
-        video.muted = false;
-        video.volume = 0.7; // Volumen al 70%
-        video.play().then(() => {
-            console.log('Video playing with sound!');
+        // ACTIVAR AUDIO al presionar el botón
+        const audio = document.getElementById('backgroundAudio');
+        audio.volume = 0.7; // Volumen al 70%
+        audio.play().then(() => {
+            console.log('Audio playing!');
         }).catch(e => {
-            console.log('Sound blocked, playing muted');
-            video.muted = true;
-            video.play();
+            console.log('Audio blocked by browser');
         });
 
-        // Crear tulipanes evitando el centro
-        for (let i = 0; i < 250; i++) {
+        // Crear tulipanes evitando el centro (REDUCIDO A 100)
+        for (let i = 0; i < 100; i++) {
             setTimeout(() => {
                 createEpicTulipan();
             }, i * 80);
@@ -400,7 +480,7 @@
             }, 8000);
         }
 
-        setInterval(createMassivePetal, 1500); // Menos frecuente
+        setInterval(createMassivePetal, 2000); // Menos frecuente para mejor rendimiento
 
         // Crear menos pétalos iniciales
         for (let i = 0; i < 10; i++) {
@@ -408,89 +488,15 @@
         }
     }
 
-    function startEpicButterflies() {
-        const container = document.getElementById('epicButterflies');
-
-        function createEpicButterfly() {
-            const butterfly = document.createElement('div');
-            butterfly.className = 'epic-butterfly';
-            butterfly.textContent = '🦋';
-            butterfly.style.left = Math.random() * 100 + '%';
-            butterfly.style.top = Math.random() * 100 + '%';
-
-            container.appendChild(butterfly);
-
-            setTimeout(() => {
-                if (butterfly.parentNode) butterfly.remove();
-            }, 20000);
-        }
-
-        setInterval(createEpicButterfly, 2000);
-
-        // Crear varias inmediatamente
-        for (let i = 0; i < 8; i++) {
-            setTimeout(createEpicButterfly, i * 500);
-        }
-    }
-
-    function startMultipleMoons() {
-        const container = document.getElementById('multipleMoons');
-        const moonPositions = [
-            {top: '10%', right: '10%'},
-            {top: '20%', left: '5%'},
-            {bottom: '15%', right: '5%'}
-        ];
-
-        moonPositions.forEach((pos, index) => {
-            const moon = document.createElement('div');
-            moon.className = 'epic-moon';
-            Object.assign(moon.style, pos);
-            moon.style.animationDelay = index * 2 + 's';
-            container.appendChild(moon);
-        });
-    }
-
     function startWaterFrame() {
         const waterFrame = document.getElementById('waterFrame');
         waterFrame.style.display = 'block';
-    }
-
-    function startFireworks() {
-        const container = document.getElementById('fireworks');
-
-        function createFirework() {
-            const firework = document.createElement('div');
-            firework.className = 'firework';
-            firework.style.left = Math.random() * 100 + '%';
-            firework.style.top = Math.random() * 50 + 25 + '%';
-
-            container.appendChild(firework);
-
-            setTimeout(() => {
-                if (firework.parentNode) firework.remove();
-            }, 3000);
-        }
-
-        setInterval(createFirework, 4000);
-    }
-
-    function startAurora() {
-        const aurora = document.getElementById('aurora');
-        aurora.style.display = 'block';
     }
 
     // Inicializar
     showQuestion();
     updateProgress();
     createQuizStars(); // Crear estrellas para el quiz
-
-    // Video SIN sonido al cargar (para evitar bloqueos)
-    setTimeout(() => {
-        const video = document.getElementById('backgroundVideo');
-        video.muted = true; // Silenciado al inicio
-        video.play().catch(e => console.log('Video autoplay blocked'));
-        videoPlaying = true;
-    }, 1000);
 
     // Función para crear estrellas en el quiz
     function createQuizStars() {
