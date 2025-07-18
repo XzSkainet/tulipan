@@ -425,7 +425,7 @@
         });
 
         // Crear tulipanes evitando el centro (REDUCIDO A 100)
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 20; i++) {
             setTimeout(() => {
                 createEpicTulipan();
             }, i * 80);
@@ -451,7 +451,7 @@
     function createStarField() {
         const container = document.getElementById('starField');
         // MÁS estrellas para fondo completo
-        for (let i = 0; i < 150; i++) {
+        for (let i = 0; i < 50; i++) {
             const star = document.createElement('div');
             star.className = 'epic-star';
             star.style.left = Math.random() * 100 + '%';
